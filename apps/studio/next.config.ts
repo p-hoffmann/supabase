@@ -47,11 +47,17 @@ const marketplaceApiProtocol: 'http' | 'https' | null =
 const nextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
   assetPrefix: getAssetPrefix(),
-  output: 'standalone',
+  // trex: switched from 'standalone' to 'export' so the build produces a static
+  // out/ directory that the trex UI plugin system can serve. The async
+  // rewrites/redirects/headers below are dropped under TREX_STATIC_EXPORT=1
+  // (Next.js export rejects them).
+  output: (process.env.TREX_STATIC_EXPORT === '1' ? 'export' : 'standalone') as 'export' | 'standalone',
+  trailingSlash: process.env.TREX_STATIC_EXPORT === '1' ? true : undefined,
   experimental: {
     clientRouterFilter: false,
   },
   async rewrites() {
+    if (process.env.TREX_STATIC_EXPORT === '1') return []
     return [
       {
         source: `/.well-known/vercel/flags`,
@@ -61,6 +67,7 @@ const nextConfig = {
     ]
   },
   async redirects() {
+    if (process.env.TREX_STATIC_EXPORT === '1') return []
     return [
       ...(process.env.NEXT_PUBLIC_IS_PLATFORM === 'true'
         ? [
@@ -507,6 +514,7 @@ const nextConfig = {
     ]
   },
   async headers() {
+    if (process.env.TREX_STATIC_EXPORT === '1') return []
     return [
       {
         source: '/(.*?)',
@@ -561,6 +569,7 @@ const nextConfig = {
     ]
   },
   images: {
+    unoptimized: process.env.TREX_STATIC_EXPORT === '1',
     dangerouslyAllowSVG: false,
     remotePatterns: [
       {

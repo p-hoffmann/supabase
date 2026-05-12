@@ -52,6 +52,12 @@ CMD ["pnpm", "dev:studio"]
 # Compile Next.js
 FROM dev AS builder
 
+# trex: bake NEXT_PUBLIC_BASE_PATH into the build so all Studio URLs are
+# prefixed with /plugins/trex/studio. Next.js reads this at build time, not
+# runtime, so it must be set before `next build`.
+ARG NEXT_PUBLIC_BASE_PATH=""
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+
 RUN pnpm --filter studio exec next build
 
 # Copy only compiled code and dependencies

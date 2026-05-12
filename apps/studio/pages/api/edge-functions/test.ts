@@ -23,9 +23,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { url: requestUrl, method, body: requestBody, headers: customHeaders } = req.body
-    const url = IS_PLATFORM
-      ? requestUrl
-      : requestUrl.replace(process.env.SUPABASE_PUBLIC_URL, process.env.SUPABASE_URL)
+    // In self-hosted mode the browser-side URL points at the public host
+    // (e.g. http://localhost:8001) which isn't reachable from inside the
+    // sidecar container. Rewrite both the origin AND ensure the SUPABASE_URL
+    // base path (e.g. `/trex`) is present — Studio's frontend builds the
+    // function URL without the base path in some flows.
+    let url = requestUrl
+    if (!IS_PLATFORM) {
+      try {
+        const u = new URL(requestUrl)
+        const internal = new URL(process.env.SUPABASE_URL || '')
+        u.protocol = internal.protocol
+        u.host = internal.host
+        const base = internal.pathname.replace(/\/$/, '')
+        if (base && !u.pathname.startsWith(base + '/') && u.pathname !== base) {
+          u.pathname = base + u.pathname
+        }
+        url = u.toString()
+      } catch {
+        url = requestUrl.replace(process.env.SUPABASE_PUBLIC_URL, process.env.SUPABASE_URL)
+      }
+    }
 
     const validEdgeFnUrl = isValidEdgeFunctionURL(url, IS_PLATFORM)
 
@@ -47,9 +65,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       {} as Record<string, string>
     )
 
-    // Only use custom headers and ensure Content-Type is set
+    // Only use custom headers and ensure Content-Type is set.
+    // Force identity encoding — trex sends gzip when Accept-Encoding allows
+    // it, and Node's fetch can choke on the response in some paths.
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept-Encoding': 'identity',
       ...sanitizedCustomHeaders,
     }
 

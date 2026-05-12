@@ -8,8 +8,10 @@ export const isValidEdgeFunctionURL = (url: string, isPlatform: boolean) => {
   }
 
   if (!isPlatform) {
+    // Allow any number of path segments before /functions/v1 so deployments
+    // behind a base path (e.g. trex's /trex/functions/v1/...) validate.
     const regexValidLocalEdgeFunctionURL = new RegExp(
-      /^https?:\/\/[^\s/?#]+\/functions\/v[0-9]{1}\/.*$/
+      /^https?:\/\/[^\s/?#]+(?:\/[^\s/?#]+)*\/functions\/v[0-9]{1}\/.*$/
     )
 
     return regexValidLocalEdgeFunctionURL.test(url)
