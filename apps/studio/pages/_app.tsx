@@ -46,6 +46,7 @@ import { StudioCommandProvider as CommandProvider } from '@/components/interface
 import { FeaturePreviewContextProvider } from '@/components/interfaces/App/FeaturePreview/FeaturePreviewContext'
 import { FeaturePreviewModal } from '@/components/interfaces/App/FeaturePreview/FeaturePreviewModal'
 import { MonacoThemeProvider } from '@/components/interfaces/App/MonacoThemeProvider'
+import { TrexThemeSync } from '@/components/TrexThemeSync'
 import { RouteValidationWrapper } from '@/components/interfaces/App/RouteValidationWrapper'
 import { UpdateBillingAddressModal } from '@/components/interfaces/App/UpdateBillingAddressModal'
 import { MainScrollContainerProvider } from '@/components/layouts/MainScrollContainerContext'
@@ -192,6 +193,7 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
                       <TooltipProvider delayDuration={0}>
                         <RouteValidationWrapper>
                           <ThemeProvider>
+                            <TrexThemeSync />
                             <DevToolbarProvider apiUrl={API_URL}>
                               <AiAssistantStateContextProvider>
                                 <CommandProvider>
