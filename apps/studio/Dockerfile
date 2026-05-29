@@ -65,6 +65,13 @@ FROM base AS production
 COPY --from=builder /app/apps/studio/public ./apps/studio/public
 COPY --from=builder /app/apps/studio/.next/standalone ./
 COPY --from=builder /app/apps/studio/.next/static ./apps/studio/.next/static
+# trex: bake in the wrapper entrypoint + key-fetch helper so the studio sidecar
+# runs straight from the published image (no host bind mounts in compose).
+# docker-entrypoint.sh reads SUPABASE_ANON_KEY / SUPABASE_SERVICE_KEY from
+# trex.setting at boot via fetch-trex-keys.cjs when they aren't supplied by env.
+COPY apps/studio/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY apps/studio/fetch-trex-keys.cjs ./apps/studio/fetch-trex-keys.cjs
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 3000
 ENTRYPOINT ["docker-entrypoint.sh"]
 HEALTHCHECK --interval=5s --timeout=5s --retries=3 CMD node -e "fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})"
