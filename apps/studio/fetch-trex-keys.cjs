@@ -35,7 +35,7 @@ async function main() {
   await client.connect();
   try {
     const r = await client.query(
-      "SELECT key, value FROM trex.setting WHERE key IN ('auth.anonKey', 'auth.serviceRoleKey')",
+      "SELECT key, value FROM trexdb.setting WHERE key IN ('auth.anonKey', 'auth.serviceRoleKey')",
     );
     const map = {};
     for (const row of r.rows) {
